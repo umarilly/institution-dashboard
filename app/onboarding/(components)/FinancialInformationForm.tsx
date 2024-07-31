@@ -53,7 +53,7 @@ const FinancialInformationForm = ({
             Total AUM ( Across the Business )
           </label>
           <Input
-            type="text"
+            type="number"
             id="totalAUM"
             className="mt-2 placeholder:text-[#E8E8E8]"
             placeholder="Enter amount"
@@ -68,7 +68,7 @@ const FinancialInformationForm = ({
             Estimated AUM for this Fund
           </label>
           <Input
-            type="text"
+            type="number"
             id="estimatedAUM"
             className="mt-2 placeholder:text-[#E8E8E8]"
             placeholder="Enter amount"
@@ -83,7 +83,7 @@ const FinancialInformationForm = ({
             Estimated Investors
           </label>
           <Input
-            type="text"
+            type="number"
             id="estimatedInvestors"
             className="mt-2 placeholder:text-[#E8E8E8]"
             placeholder="Enter amount"

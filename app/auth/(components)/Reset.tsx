@@ -73,25 +73,25 @@ export default function ResetForm() {
 			<BackdropGradientBlurBlob color="#f0efff" top="50px" left="50px" />
 			<BackdropGradientBlurBlob color="#ffe6e6" bottom="50px" right="50px" />
 
-			<form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-[600px] m-4">
-				<div className="p-10 border border-[#E8E8E8] rounded-[20px] shadow-md bg-white">
-					<h1 className="text-[40px] font-bold mb-10">Reset Password</h1>
+			<form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-[480px]">
+				<div className="px-8 py-8 border border-[#E8E8E8] rounded-[20px] shadow-md bg-white">
+					<h1 className="text-[34px] font-bold mb-5">Reset Password</h1>
 
-					<div className="mb-10" id="form">
-						<div >
-							<label htmlFor="password1" className="font-medium">New Password</label>
-							<Input type="password" placeholder="Password" id="password1" className="mt-4 text-base rounded-[10px] h-12" {...register("password", { required: true })} />
+					<div id="form">
+						<div className="h-auto" >
+							<label htmlFor="password1" className="font-medium text-base">New Password</label>
+							<Input type="password" placeholder="Password" id="password1" className="mt-2 text-base rounded-[5px]" {...register("password", { required: true })} />
 							{errors.password && <span className="text-red-600 m-1 text-xs">Password is required</span>}
 						</div>
-						<div className="my-8">
-							<label htmlFor="password2" className="font-medium">Confirm Password</label>
-							<Input type="password" placeholder="Password" id="password2" className="mt-4 text-base rounded-[10px] h-12" {...register("confirmPassword", { required: true })} />
+						<div className="h-auto mt-3">
+							<label htmlFor="password2" className="font-medium text-base">Confirm Password</label>
+							<Input type="password" placeholder="Password" id="password2" className="mt-2 text-base rounded-[5px]" {...register("confirmPassword", { required: true })} />
 							{errors.confirmPassword && <span className="text-red-600 m-1 text-xs">Confirmation Password is required</span>}
 						</div>
 					</div>
 
-					<div>
-						<Button className="w-full h-12 rounded-[10px]" variant="default" type="submit" disabled={loading}>
+					<div className="mt-4" >
+						<Button className="w-full h-10 rounded-[8px]" variant="default" type="submit" disabled={loading}>
 							{loading ? <Spinner /> : "Reset Password"}
 						</Button>
 					</div>

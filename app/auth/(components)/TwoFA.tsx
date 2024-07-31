@@ -57,21 +57,21 @@ export default function TwoFAForm() {
 			<BackdropGradientBlurBlob color="#f0efff" top="50px" left="50px" />
 			<BackdropGradientBlurBlob color="#ffe6e6" bottom="50px" right="50px" />
 
-			<form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-[600px] m-4">
-				<div className="p-10 border border-[#E8E8E8] rounded-[20px] shadow-md bg-white">
-					<h1 className="text-[40px] font-bold mb-5">Two-Factor Authentication</h1>
+			<form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-[480px]">
+				<div className="px-8 py-8 border border-[#E8E8E8] rounded-[20px] shadow-md bg-white">
+					<h1 className="text-[26px] font-bold mb-3">Two-Factor Authentication</h1>
 
-					<p className="mb-10">Enter OTP (One-time-pin) code sent to your email to proceed with password reset.</p>
+					<p className="mb-4 text-sm">Enter OTP (One-time-pin) code sent to your email to proceed with password reset.</p>
 
-					<div className="mb-10" id="form">
-						<div>
-							<label htmlFor="otp" className="font-medium">OTP</label>
-							<Input type="password" placeholder="******" id="otp" className="mt-4 text-base rounded-[10px] h-12" {...register("otp", { required: true })} />
+					<div className="mb-4" id="form">
+						<div className="h-auto" >
+							<label htmlFor="otp" className="font-medium text-base">OTP</label>
+							<Input type="password" placeholder="******" id="otp" className="mt-2 text-base rounded-[5px]" {...register("otp", { required: true })} />
 							{errors.otp && <span className="text-red-600 m-1 text-xs">OTP Code is required</span>}
 						</div>
 					</div>
 
-					<Button className="w-full h-12 rounded-[10px]" variant="default" disabled={loading}>
+					<Button className="w-full h-10 rounded-[8px]" variant="default" disabled={loading}>
 						{loading ? <Spinner /> : "Confirm"}
 					</Button>
 				</div>

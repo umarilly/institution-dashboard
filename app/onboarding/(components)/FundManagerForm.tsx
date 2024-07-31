@@ -3,7 +3,6 @@ import { Input } from "@/components/ui/input";
 import { LeftArrow, RightArrow } from "@/svg-icons/SVGIcons";
 import { Dispatch, SetStateAction } from "react";
 import { useOnBoardingFormStore } from "./OnBoarding";
-
 import {
   Select,
   SelectContent,
@@ -43,15 +42,12 @@ const FinancialInformationForm = ({
   });
 
   function goBack() {
-    // save state here before going back
     setFundManagerForm(watch() as fundManagerFormType);
-
     setSelected(2);
   }
-  function goForward(data: any) {
-    // save state here before going formward
-    setFundManagerForm(data);
 
+  function goForward(data: any) {
+    setFundManagerForm(data);
     setSelected(4);
   }
 
@@ -114,10 +110,17 @@ const FinancialInformationForm = ({
             id="linkedInLink"
             className="mt-2 placeholder:text-[#E8E8E8]"
             placeholder="Enter LinkedIn link"
-            {...register("linkedInLink", { required: true })}
+            {...register("linkedInLink", {
+              required: "This field is required",
+              validate: (value) =>
+                /^https:\/\/linkedin\.com\/in\/[a-zA-Z0-9-]+$/.test(value) || /linkedin\.com\/in\/[a-zA-Z0-9-]+$/.test(value) ||
+              "Invalid LinkedIn URL format. Please Enter: linkedin.com/in/username",
+            })}
           />
           {errors.linkedInLink && (
-            <span className="text-red-500 text-xs">This field is required</span>
+            <span className="text-red-500 text-xs">
+              {errors.linkedInLink.message}
+            </span>
           )}
         </div>
       </div>

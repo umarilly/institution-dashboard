@@ -4,7 +4,6 @@ import { useState } from "react";
 import { signUp } from "aws-amplify/auth";
 import { useRouter } from "next/navigation";
 import { useForm, SubmitHandler } from "react-hook-form";
-
 import { Button } from "../../../components/ui/button"
 import { Input } from "../../../components/ui/input"
 import { useToast } from "@/components/ui/use-toast"
@@ -20,6 +19,7 @@ type Inputs = {
 
 export default function RegisterForm() {
 	const [loading, setLoading] = useState(false);
+	const [successMessage, setSuccessMessage] = useState("");
 
 	const router = useRouter();
 	const { toast } = useToast();
@@ -28,13 +28,11 @@ export default function RegisterForm() {
 
 	const setAuthData = useAuthStore((state) => state.setAuthData);
 
-
 	const onSubmit: SubmitHandler<Inputs> = async data => {
 		setLoading(true);
 
 		try {
 			const { email, password } = data;
-
 			const { isSignUpComplete, userId, nextStep } = await signUp({
 				username: email,
 				password,
@@ -44,26 +42,24 @@ export default function RegisterForm() {
 					}
 				}
 			});
-
 			if (nextStep.signUpStep === 'CONFIRM_SIGN_UP') {
 				setAuthData({
 					email: data.email,
 					password: "",
 					userId
 				});
-
-				router.push("/auth/confirm-register");
+				setSuccessMessage("Success - OTP sent to your email");
+				setTimeout(() =>{
+					router.push("/auth/confirm-register");
+				},2000)
 			}
-
 		} catch (error: unknown) {
-
 			toast({
 				variant: "destructive",
 				title: "Error Occurred",
 				description: String(parsedErrorMessage(error)),
 				className: "rounded-xl p-3"
 			})
-
 		} finally {
 			setLoading(false);
 		}
@@ -73,28 +69,28 @@ export default function RegisterForm() {
 		<>
 			<BackdropGradientBlurBlob color="#e6e6fe" top="50px" left="50px" />
 			<BackdropGradientBlurBlob color="#E8FFE4" bottom="50px" right="50px" />
-			<form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-[600px] m-4" >
-				<div className="p-10  border border-[#E8E8E8] rounded-[20px] shadow-md bg-[white]">
-					<h1 className="text-[40px] font-bold mb-10">Register</h1>
+			<form onSubmit={handleSubmit(onSubmit)} className="w-full max-w-[480px]" >
+				<div className="px-8 py-8 border border-[#E8E8E8] rounded-[20px] shadow-md bg-[white]">
+					<h1 className="text-[34px] font-bold mb-5">Register</h1>
 
-					<div className="mb-10" id="form">
-						<div>
-							<label htmlFor="email" className="font-medium">Email</label>
-							<Input type="email" placeholder="Email" id="email" className="mt-4 text-base rounded-[10px] h-12"  {...register("email", { required: true })} />
-							{errors.email && <span className="text-red-600 m-1 text-xs">Email is required</span>}
+					<div id="form">
+						<div className="h-auto" >
+							<label htmlFor="email" className="font-medium text-base">Email</label>
+							<Input type="email" placeholder="Email" id="email" className="mt-2 text-base rounded-[5px]"  {...register("email", { required: true })} />
 						</div>
-						<div className="my-8">
-							<label htmlFor="password" className="font-medium">Password</label>
-							<Input type="password" placeholder="Password" id="password" className="mt-4 text-base rounded-[10px] h-12" {...register("password", { required: true })} />
-							{errors.password && <span className="text-red-600 m-1 text-xs">Password is required</span>}
+						{errors.email && <div className="text-red-600 mt-3 ml-2 text-sm font-semibold">Email is required</div>}
+						<div className="h-auto mt-3">
+							<label htmlFor="password" className="font-medium text-base">Password</label>
+							<Input type="password" placeholder="Password" id="password" className="mt-2 text-base rounded-[5px]" {...register("password", { required: true })} />
 						</div>
+						{errors.password && <div className="text-red-600 mt-3 ml-2 text-sm font-semibold">Password is required</div>}
 					</div>
-
-					<div>
-						<Button className="w-full h-12 rounded-[10px]" variant="default" disabled={loading} type="submit">{loading ? <Spinner /> : "Create an account"}</Button>
+					{successMessage && <div className="text-green-600 mt-3 ml-2 text-sm font-semibold">{successMessage}</div>}
+					<div className="mt-4" >
+						<Button className="w-full h-10 rounded-[8px]" variant="default" disabled={loading} type="submit">{loading ? <Spinner /> : "Create an account"}</Button>
 
 						<Link href="/auth/login">
-							<Button className="w-full h-12 rounded-[10px] mt-4" variant="outline" disabled={loading} type="button">
+							<Button className="w-full h-10 rounded-[8px] mt-4" variant="outline" disabled={loading} type="button">
 								{loading ? <Spinner /> : "Login"}
 							</Button>
 						</Link>

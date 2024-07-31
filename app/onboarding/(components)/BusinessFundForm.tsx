@@ -75,16 +75,14 @@ const BusinessFundForm = ({
   });
 
   function goBack() {
-    // save state here before going back
-
     console.log("can't go back from here");
   }
-  function goForward(data: any) {
-    // save state here before going formward
-    setBusinessFundForm(data);
 
+  function goForward(data: any) {
+    setBusinessFundForm(data);
     setSelected(2);
   }
+
   return (
     <>
       <div>

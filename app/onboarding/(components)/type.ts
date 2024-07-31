@@ -22,7 +22,7 @@ export type fundDocumentsFormType = {
 export type baseCurrencyFormType = {
   baseCurrency: string;
   fundInceptionDate: Date;
-  fiscalYearEnd: string;
+  fiscalYearEnd: any;
   administrator: string;
 };
 export type OnBoardingStoreType = {

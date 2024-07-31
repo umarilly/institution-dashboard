@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-
+import { Inter } from "next/font/google"
+import Provider from './Provider';
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster"
 import ConfigureAmplifyClientSide from "./amplify-cognito-config";
@@ -22,7 +22,9 @@ export default function RootLayout({
       <body className={inter.className}>
         <ConfigureAmplifyClientSide />
         <Toaster />
-        {children}
+        <Provider>
+          {children}
+        </Provider>
       </body>
     </html>
   );

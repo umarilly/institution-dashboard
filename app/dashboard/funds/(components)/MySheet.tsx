@@ -5,7 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { RedirectIcon } from "@/svg-icons/SVGIcons";
 import MyDialog from "./MyDialog";
 import MyRules from "./MyRules";
-import AcceptedIssuers from '../../../../components/ui/issuers-dropdown';
+import AcceptedIssuers from './AcceptedIssuers';
 
 const RULES = [
   {

@@ -1,35 +1,29 @@
-import WFetch from "@/lib/Wfetch";
+
 import { baseURL } from "@/lib/constants";
+import axios from 'axios';
 
 export const SaveSignUpInstitutionInfo = async ({
   email,
-  userId
+  userId,
 }: {
-  email: string,
-  userId: string
+  email: string;
+  userId: string;
 }) => {
-  const response = await WFetch(`${baseURL}/institute/create`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email, cognito_user_id: userId }),
-  });
-  const data = await response.json();
-
-  return data;
-}
-
-// method to fetch onboarding status of institution
-export const LoginInstitutionInfo = async (email: string) => {
-  const response = await WFetch(`${baseURL}/institute/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email }),
-  });
-  const data = await response.json();
-
-  return data;
-}
+  console.log("Email : ",email);
+  console.log("Username : ",userId);
+  try {
+    const response = await axios.post(`${baseURL}/auth/register`, {
+      email,
+      username: userId,
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    console.log("Signup Info Saved Successfully Ref#01");
+    return response.data;
+  } catch (error) {
+    console.error('Error saving signup institution info : ', error);
+    throw error;
+  }
+};

@@ -55,7 +55,6 @@ const FundDocumentsForm = ({
   };
 
   function goBack() {
-    // save state here before going back
     setFundDocumentsForm({
       memorandum: files.memorandum,
       factsheet: files.factsheet,
@@ -65,7 +64,6 @@ const FundDocumentsForm = ({
     setSelected(3);
   }
   function goForward() {
-    // save state here before going formward
     console.log(files);
     let memorandum = "";
     let factsheet = "";

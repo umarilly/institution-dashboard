@@ -4,14 +4,14 @@ import SidebarCircularIcons from "@/components/ui/SidebarCircularIcons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Bag, Dollar, FinanceBook, Fund, RightArrow, User } from "@/svg-icons/SVGIcons";
-import React, { Dispatch, SetStateAction } from "react";
+import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import { useOnBoardingFormStore } from "./OnBoarding";
 import { OnBoardingStoreType } from "./type";
 import { baseURL } from "@/lib/constants";
 import { useToast } from "@/components/ui/use-toast";
 import Spinner from "@/components/ui/spinner";
-import { useAuthStore } from "@/store/use-auth-store";
-import * as onboardingServices from "@/services/onboarding-service";
+import { fetchAuthSession } from "aws-amplify/auth";
+import axios from 'axios';
 
 const FinalStepReview = ({
   setSelected,
@@ -27,7 +27,7 @@ const FinalStepReview = ({
   const fundManagerForm = useOnBoardingFormStore(
     (state: OnBoardingStoreType) => state.fundManagerForm
   );
-  const fundDocumentsForm = useOnBoardingFormStore(
+  const fundDocumentForm = useOnBoardingFormStore(
     (state: OnBoardingStoreType) => state.fundDocumentsForm
   );
   const baseCurrencyForm = useOnBoardingFormStore(
@@ -37,85 +37,93 @@ const FinalStepReview = ({
   const [loader, setLoader] = React.useState<boolean>(false);
   const { toast } = useToast();
 
-  const getAuthData = useAuthStore((state) => state.getAuthData);
-  const authData = getAuthData();
+  const [ficalYearEndMonth, setFicalYearEndMonth] = useState(0);
+  const [ficalYearEndDay, setFicalYearEndDay] = useState(0);
 
+  useEffect(() => {
+    if (baseCurrencyForm && baseCurrencyForm.fiscalYearEnd) {
+      console.log("Fiscal Year End: ", baseCurrencyForm.fiscalYearEnd); 
+      const [monthName, day] = baseCurrencyForm.fiscalYearEnd.split(" ");
+      const monthNumber = new Date(`${monthName} 1, 2000`).getMonth() + 1;
+      setFicalYearEndMonth(monthNumber);
+      setFicalYearEndDay(parseInt(day));
+    }
+  }, [baseCurrencyForm]);
   async function submitForm() {
+
+    setLoader(true);
+    const session = await fetchAuthSession();
+    const accessToken = session.tokens!.accessToken.toString();
+    console.log("Access Token : ", accessToken);
+
     try {
-      setLoader(true);
+      const payload = {
+        business_name: businessFundForm.businessName,
+        domiclied_in: businessFundForm.domicileIn,
+        date_established: businessFundForm.dateEstablished,
+        industry_type: businessFundForm.typeOfIndustry,
+        total_aum: financialInformationForm.totalAUM,
+        fund_estimated_aum: financialInformationForm.estimatedAUM,
+        estimated_investors: financialInformationForm.estimatedInvestors,
+        base_currency: baseCurrencyForm.baseCurrency,
+        fund_inception_date: baseCurrencyForm.fundInceptionDate,
+        fiscal_year_end_day: ficalYearEndDay,
+        fical_year_end_month: ficalYearEndMonth,
+        administrator: baseCurrencyForm.administrator,
+        owner: fundManagerForm.ownerName,
+        position: fundManagerForm.position,
+        linkedin: fundManagerForm.linkedInLink,
+      };
 
-      if (
-        !authData?.email ||
-        !fundDocumentsForm.memorandum ||
-        !fundDocumentsForm.factsheet ||
-        !fundDocumentsForm.license
-      )
-        return;
-      //store the fundDocumentsForm in S3 and get the URL
-      const responseData = await onboardingServices.GetPresignedUrls(
-        authData.email,
-        fundDocumentsForm.memorandum.name,
-        fundDocumentsForm.factsheet.name,
-        fundDocumentsForm.license.name
-      );
-      if (responseData.error) {
-        throw new Error(responseData.message);
-      }
-
-      console.log("responseData.data", responseData.data);
-      await Promise.all([
-        await fetch(responseData.data.memoranumPresignedUrl, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/pdf",
-          },
-          body: fundDocumentsForm.memorandum,
-        }),
-        await fetch(responseData.data.factsheetPresignedUrl, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/pdf",
-          },
-          body: fundDocumentsForm.factsheet,
-        }),
-        await fetch(responseData.data.licensePresignedUrl, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/pdf",
-          },
-          body: fundDocumentsForm.license,
-        }),
-      ]);
-
-      const response: Response = await fetch(`${baseURL}/institute/onboard`, {
-        method: "POST",
+      const response = await axios.post(`${baseURL}/fund/fund-info`, payload, {
         headers: {
           "Content-Type": "application/json",
+          "Authorization": accessToken
         },
-        body: JSON.stringify({
-          email: authData!.email!,
-          ...businessFundForm,
-          ...financialInformationForm,
-          ...fundManagerForm,
-          ...baseCurrencyForm,
-        }),
       });
-      const data: fetchResponseType<any> = await response.json();
+
+      console.log("Data Saved Successfully");
+      const data = response.data;
 
       if (data.error) {
         throw new Error(data.message);
       }
 
+      const formData = new FormData();
+      formData.append("memorandum", fundDocumentForm.memorandum!);
+      formData.append("license", fundDocumentForm.license!);
+      formData.append("factsheet", fundDocumentForm.factsheet!);
+
+      const filesResponse = await axios.post(`${baseURL}/fund/upload-documents`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+          "Authorization": accessToken
+        },
+      });
+
+      const filesData = filesResponse.data;
+      const filesUrls = filesData.data;
+      console.log("Files : ", filesUrls);
+
+      const memorandumUrl = filesUrls.memorandumUrl;
+      const licenseUrl = filesUrls.licenseUrl;
+      const factsheetUrl = filesUrls.factsheetUrl;
+
+      console.log("Memorandum URL:", memorandumUrl);
+      console.log("License URL:", licenseUrl);
+      console.log("Factsheet URL:", factsheetUrl);
+
       toast({
         variant: "default",
         title: "Onboarding success",
-        description: "you have successfully onboarded",
+        description: "You have successfully onboarded",
         duration: 2000,
       });
 
       setSelected(7);
-    } catch (err: any) {
-      console.log("Error : ", err);
+    }
+    catch (err: any) {
+      console.log("Error: ", err);
       toast({
         variant: "destructive",
         description: err.message,
@@ -125,6 +133,7 @@ const FinalStepReview = ({
       setLoader(false);
     }
   }
+
   return (
     <section
       className="max-w-[720px] p-[50px] rounded-2xl bg-[#ffffff80] my-[120px] flex flex-col gap-10"
@@ -326,14 +335,16 @@ const FinalStepReview = ({
           <label htmlFor="Memorandum">Memorandum</label>
           <InputFileButton
             fileName={
-              fundDocumentsForm.memorandum
-                ? minimzeLength(fundDocumentsForm.memorandum.name)
-                : ""
+              // fundDocumentsForm.memorandum
+              //   ? minimzeLength(fundDocumentsForm.memorandum.name)
+              //   : 
+              ""
             }
             fileSize={
-              fundDocumentsForm.memorandum
-                ? convertToMBString(fundDocumentsForm.memorandum.size)
-                : ""
+              // fundDocumentsForm.memorandum
+              //   ? convertToMBString(fundDocumentsForm.memorandum.size)
+              //   : 
+              ""
             }
           />
         </div>
@@ -341,14 +352,16 @@ const FinalStepReview = ({
           <label htmlFor="factsheet">Factsheet</label>
           <InputFileButton
             fileName={
-              fundDocumentsForm.factsheet
-                ? minimzeLength(fundDocumentsForm.factsheet.name)
-                : ""
+              // fundDocumentsForm.factsheet
+              //   ? minimzeLength(fundDocumentsForm.factsheet.name)
+              //   : 
+              ""
             }
             fileSize={
-              fundDocumentsForm.factsheet
-                ? convertToMBString(fundDocumentsForm.factsheet.size)
-                : ""
+              // fundDocumentsForm.factsheet
+              //   ? convertToMBString(fundDocumentsForm.factsheet.size)
+              //   : 
+              ""
             }
           />
         </div>
@@ -356,14 +369,16 @@ const FinalStepReview = ({
           <label htmlFor="license">License</label>
           <InputFileButton
             fileName={
-              fundDocumentsForm.license
-                ? minimzeLength(fundDocumentsForm.license.name)
-                : ""
+              // fundDocumentsForm.license
+              //   ? minimzeLength(fundDocumentsForm.license.name)
+              //   : 
+              ""
             }
             fileSize={
-              fundDocumentsForm.license
-                ? convertToMBString(fundDocumentsForm.license.size)
-                : ""
+              // fundDocumentsForm.license
+              //   ? convertToMBString(fundDocumentsForm.license.size)
+              //   : 
+              ""
             }
           />
         </div>
@@ -402,7 +417,7 @@ const FinalStepReview = ({
             <Input
               readOnly={true}
               contentEditable={false}
-              value={String(baseCurrencyForm.fundInceptionDate).slice(4, 15)}
+              value={String(baseCurrencyForm.fundInceptionDate)}
               type="text"
               id="fundInceptionDate"
               className="mt-2 placeholder:text-[#E8E8E8]"

@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LeftArrow, RightArrow } from "@/svg-icons/SVGIcons";
-import { Dispatch, SetStateAction, use } from "react";
+import { Dispatch, SetStateAction } from "react";
 import { useOnBoardingFormStore } from "./OnBoarding";
-import DatePicker from "@/components/ui/DatePicker";
+import DatePickerBaseCurrency from "@/components/ui/DatePickerBaseCurrency";
 
 import {
   Select,
@@ -57,36 +57,32 @@ const FinancialInformationForm = ({
   } = useForm({
     defaultValues: {
       ...baseCurrencyForm,
-      ...{
-        baseCurrency: baseCurrencyForm.baseCurrency
-          ? baseCurrencyForm.baseCurrency
-          : CURRENCIES[0],
-      },
-      ...{
-        fiscalYearEnd: baseCurrencyForm.fiscalYearEnd
-          ? baseCurrencyForm.fiscalYearEnd
-          : FISCAL_YEARS[0],
-      },
-      ...{
-        administrator: baseCurrencyForm.administrator
-          ? baseCurrencyForm.administrator
-          : ADMINISTRATORS[0],
-      },
+      baseCurrency: baseCurrencyForm.baseCurrency
+        ? baseCurrencyForm.baseCurrency
+        : CURRENCIES[0],
+      administrator: baseCurrencyForm.administrator
+        ? baseCurrencyForm.administrator
+        : ADMINISTRATORS[0],
     },
   });
 
   function goBack() {
-    // save state here before going back
-    setBaseCurrencyForm(watch() as baseCurrencyFormType);
-
+    setBaseCurrencyForm(watch() as unknown as baseCurrencyFormType);
     setSelected(4);
   }
-  function goForward(data: any) {
-    // save state here before going formward
-    setBaseCurrencyForm(data);
 
+  function goForward(data: any) {
+    setBaseCurrencyForm(data);
     setSelected(6);
   }
+
+  const formatDate = (date: Date | undefined) => {
+    if (!date) return "";
+    return new Date(date).toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+    });
+  };
 
   return (
     <>
@@ -94,7 +90,7 @@ const FinancialInformationForm = ({
         <h1 className="text-[40px] mb-2 font-bold">Base Currency</h1>
         <p className="text-[16px]">
           Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-          incididunt ut labore et dolore magna aliqua.
+          incididunt ut labore et dolore magna
         </p>
       </div>
       <div className="flex flex-col gap-5">
@@ -127,15 +123,15 @@ const FinancialInformationForm = ({
           <label className="font-medium" htmlFor="fundInceptionDate">
             Fund inception date
           </label>
-          <div>
+          <div id="fundInceptionDate">
             <Controller
               control={control}
               name="fundInceptionDate"
               render={({ field }) => (
-                <DatePicker
+                <DatePickerBaseCurrency
                   placeholder="Select date"
                   value={field.value}
-                  onChange={field.onChange}
+                  onChange={(date) => field.onChange(formatDate(date))}
                 />
               )}
             />
@@ -150,18 +146,11 @@ const FinancialInformationForm = ({
               control={control}
               name="fiscalYearEnd"
               render={({ field }) => (
-                <Select value={field.value} onValueChange={field.onChange}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-[250px]">
-                    {FISCAL_YEARS.map((fiscalYear) => (
-                      <SelectItem value={fiscalYear} key={fiscalYear}>
-                        {fiscalYear}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <DatePickerBaseCurrency
+                  placeholder="Select date"
+                  value={field.value}
+                  onChange={(date) => field.onChange(formatDate(date))}
+                />
               )}
             />
           </div>

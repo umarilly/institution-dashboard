@@ -10,8 +10,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useState } from "react";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ToggleOnboardingStatus } from "@/services/onboarding-service";
 import { useAuthStore } from "@/store/use-auth-store";
@@ -32,10 +32,7 @@ export default function SplashScreen() {
 
   const completeUserOnboarding = async () => {
     console.log("User onboarding completed");
-
-    // send api call to set onboarding status to true on the backend as well as on the client store
     const response = await ToggleOnboardingStatus(authData?.email!);
-
     if (response.data) {
       console.log("Onboarding status set to true");
       setOnboardingStatus(true);

@@ -1,17 +1,26 @@
 import WFetch from "@/lib/Wfetch";
 import { baseURL } from "@/lib/constants";
+import axios from 'axios';
+import { fetchAuthSession } from "aws-amplify/auth";
 
 export const ToggleOnboardingStatus = async (email: string) => {
-  const response = await WFetch(`${baseURL}/institute/confirm-onboard`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email }),
-  });
-  const data = await response.json();
 
-  return data;
+  const session = await fetchAuthSession();
+  const accessToken = session.tokens!.accessToken.toString();
+  console.log("Access Token : ", accessToken);
+
+  try {
+    const response = await axios.get(`${baseURL}/fund/toggle-user`, {
+      headers: {
+        Authorization: accessToken,
+      },
+    });
+    console.log("Response : ", response.data);
+    return response.data;
+  } catch (error) {
+    console.error("Error toggling onboarding status:", error);
+    throw error;
+  }
 };
 
 export const GetPresignedUrls = async (

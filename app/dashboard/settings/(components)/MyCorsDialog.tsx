@@ -1,9 +1,9 @@
+import React, { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogClose,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -11,41 +11,78 @@ import {
 import { Input } from "@/components/ui/input";
 import Spinner from "@/components/ui/spinner";
 import { useToast } from "@/components/ui/use-toast";
-import React, { useRef, useState } from "react";
+import { baseURL } from "@/lib/constants";
+import axios from "axios";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchAuthSession } from "aws-amplify/auth";
 
-const MyCorsDialog = () => {
+interface MyCorsDialogProps {
+  onAddSuccess: () => void;
+}
+
+const MyCorsDialog: React.FC<MyCorsDialogProps> = ({ onAddSuccess }) => {
+  
   const [loading, setLoading] = useState<boolean>(false);
   const [origin, setOrigin] = useState<string>("");
   const [errors, setErrors] = useState<string>("");
   const dialogCloseRef = useRef<HTMLButtonElement>(null);
 
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const addThisOrigin = async () => {
+  const addCorsOrigin = async (origin: string) => {
+    const session = await fetchAuthSession();
+    const accessToken = session.tokens!.accessToken.toString();
+
+    await axios.put(`${baseURL}/fund/cors`, {
+      origin: origin
+    },
+      {
+        headers: {
+          Authorization: accessToken,
+        },
+      }
+    );
+  };
+
+  const mutation = useMutation({
+    mutationFn: () => addCorsOrigin(origin),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["corsOrigins"] }); 
+      toast({
+        variant: "default",
+        title: "Origin Added",
+        duration: 3000,
+        description: "Origin added successfully",
+        className: "rounded-xl p-3 bg-green-600 text-white",
+      });
+      onAddSuccess();
+    },
+    onError: (error: any) => {
+      console.log("Error Adding Origin", error);
+      toast({
+        variant: "destructive",
+        title: "Origin Error",
+        duration: 3000,
+        description: error.message,
+        className: "rounded-xl p-3 bg-red-600 text-white",
+      });
+    },
+    onSettled: () => {
+      setLoading(false);
+      if (dialogCloseRef.current) {
+        dialogCloseRef.current.click();
+      }
+    },
+  });
+  
+  const handleAddOrigin = () => {
     if (!origin) {
       setErrors("Attribute is required");
       return;
     }
-
     setLoading(true);
-    // Add your add rule logic here
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    // Once done
-    setLoading(false);
-
-    toast({
-      variant: "default",
-      title: "Origin Added",
-      duration: 2000,
-      description: "Origin added successfully",
-      className: "rounded-xl p-3 bg-green-600 text-white",
-    });
-
-    if (dialogCloseRef.current) {
-      dialogCloseRef.current.click();
-    }
+    mutation.mutate();
   };
 
   const clearAllStates = () => {
@@ -67,7 +104,10 @@ const MyCorsDialog = () => {
           </DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-2 mb-8">
-          <label className="text-[#3E4772] text-[16px] font-medium" htmlFor="origin">
+          <label
+            className="text-[#3E4772] text-[16px] font-medium"
+            htmlFor="origin"
+          >
             Origin
           </label>
           <Input
@@ -89,7 +129,7 @@ const MyCorsDialog = () => {
           </DialogClose>
           <Button
             className="w-full p-5 text-[16px] text-[#E4EDFF] bg-[#3E4772] hover:bg-[#3E477295]"
-            onClick={addThisOrigin}
+            onClick={handleAddOrigin}
           >
             {loading ? <Spinner /> : "Add origin"}
           </Button>

@@ -15,9 +15,8 @@ export async function middleware(request: NextRequest) {
   const user = await authenticatedUser({ request, response });
 
   const isOnDashboard = request.nextUrl.pathname.startsWith("/dashboard");
-  const isOnAdminArea =
-    request.nextUrl.pathname.startsWith("/dashboard/admins");
-
+  const isOn_onBoarding = request.nextUrl.pathname.startsWith("/onboarding");
+  const isOnAdminArea = request.nextUrl.pathname.startsWith("/dashboard/admins");
   const isRoot = request.nextUrl.pathname === "/";
 
   if (isRoot) {
@@ -34,6 +33,13 @@ export async function middleware(request: NextRequest) {
     }
     if (isOnAdminArea && !user.isAdmin) {
       return NextResponse.redirect(new URL("/dashboard", request.nextUrl));
+    }
+    return response;
+  }
+
+  if (isOn_onBoarding) {
+    if (!user) {
+      return NextResponse.redirect(new URL("/auth/login", request.nextUrl));
     }
     return response;
   }

@@ -1,4 +1,8 @@
 import React, { useRef, useState } from "react";
+import axios from "axios";
+import { baseURL } from "@/lib/constants";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchAuthSession } from "aws-amplify/auth";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,33 +15,22 @@ import {
 import { Input } from "@/components/ui/input";
 import Spinner from "@/components/ui/spinner";
 import { useToast } from "@/components/ui/use-toast";
-import { baseURL } from "@/lib/constants";
-import axios from "axios";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchAuthSession } from "aws-amplify/auth";
 
-interface MyCorsDialogProps {
-  onAddSuccess: () => void;
-}
-
-const MyCorsDialog: React.FC<MyCorsDialogProps> = ({ onAddSuccess }) => {
+const MyCorsDialog = () => {
   
   const [loading, setLoading] = useState<boolean>(false);
   const [origin, setOrigin] = useState<string>("");
   const [errors, setErrors] = useState<string>("");
   const dialogCloseRef = useRef<HTMLButtonElement>(null);
-
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const addCorsOrigin = async (origin: string) => {
+  const addCorsOrigin = async () => {
     const session = await fetchAuthSession();
     const accessToken = session.tokens!.accessToken.toString();
-
     await axios.put(`${baseURL}/fund/cors`, {
       origin: origin
-    },
-      {
+    },{
         headers: {
           Authorization: accessToken,
         },
@@ -46,9 +39,9 @@ const MyCorsDialog: React.FC<MyCorsDialogProps> = ({ onAddSuccess }) => {
   };
 
   const mutation = useMutation({
-    mutationFn: () => addCorsOrigin(origin),
+    mutationFn: addCorsOrigin,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["corsOrigins"] }); 
+      queryClient.invalidateQueries({ queryKey: ["settings"] }); 
       toast({
         variant: "default",
         title: "Origin Added",
@@ -56,15 +49,13 @@ const MyCorsDialog: React.FC<MyCorsDialogProps> = ({ onAddSuccess }) => {
         description: "Origin added successfully",
         className: "rounded-xl p-3 bg-green-600 text-white",
       });
-      onAddSuccess();
     },
     onError: (error: any) => {
-      console.log("Error Adding Origin", error);
       toast({
         variant: "destructive",
-        title: "Origin Error",
+        title: "Error During Adding Origin",
         duration: 3000,
-        description: error.message,
+        description: "There was an error during adding an origin",
         className: "rounded-xl p-3 bg-red-600 text-white",
       });
     },
@@ -76,7 +67,7 @@ const MyCorsDialog: React.FC<MyCorsDialogProps> = ({ onAddSuccess }) => {
     },
   });
   
-  const handleAddOrigin = () => {
+  const handleAddOrigin = (origin : any) => {
     if (!origin) {
       setErrors("Attribute is required");
       return;

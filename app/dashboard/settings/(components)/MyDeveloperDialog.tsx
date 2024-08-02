@@ -1,4 +1,8 @@
 import React, { useRef, useState } from "react";
+import axios from "axios";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { fetchAuthSession } from "aws-amplify/auth";
+import { baseURL } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,17 +15,9 @@ import {
 import { Input } from "@/components/ui/input";
 import Spinner from "@/components/ui/spinner";
 import { useToast } from "@/components/ui/use-toast";
-import { baseURL } from "@/lib/constants";
-import axios from "axios";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { fetchAuthSession } from "aws-amplify/auth";
 
-interface MyCorsDialogProps {
-  onAddSuccess: () => void;
-}
+const MyDeveloperDialog = () => {
 
-const MyDeveloperDialog: React.FC<MyCorsDialogProps> = ({ onAddSuccess }) => {
-  
   const [loading, setLoading] = useState<boolean>(false);
   const [token, setOrigin] = useState<string>("");
   const [errors, setErrors] = useState<string>("");
@@ -30,10 +26,9 @@ const MyDeveloperDialog: React.FC<MyCorsDialogProps> = ({ onAddSuccess }) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const addCorsOrigin = async (token: string) => {
+  const addCorsOrigin = async () => {
     const session = await fetchAuthSession();
     const accessToken = session.tokens!.accessToken.toString();
-
     await axios.post(`${baseURL}/fund/token`, {
       name: token
     },
@@ -41,30 +36,28 @@ const MyDeveloperDialog: React.FC<MyCorsDialogProps> = ({ onAddSuccess }) => {
         headers: {
           Authorization: accessToken,
         },
-      }
-    );
+      });
   };
 
   const mutation = useMutation({
-    mutationFn: () => addCorsOrigin(token),
+    mutationFn: addCorsOrigin,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["token"] }); 
+      queryClient.invalidateQueries({ queryKey: ["settings"] });
       toast({
         variant: "default",
-        title: "token Added",
+        title: "Token Added",
         duration: 3000,
-        description: "token added successfully",
+        description: "Token Added Successfully",
         className: "rounded-xl p-3 bg-green-600 text-white",
       });
-      onAddSuccess();
     },
     onError: (error: any) => {
       console.log("Error Adding token", error);
       toast({
         variant: "destructive",
-        title: "token Error",
+        title: "Token Error",
         duration: 3000,
-        description: error.message,
+        description: "Error Adding Token",
         className: "rounded-xl p-3 bg-red-600 text-white",
       });
     },
@@ -75,7 +68,7 @@ const MyDeveloperDialog: React.FC<MyCorsDialogProps> = ({ onAddSuccess }) => {
       }
     },
   });
-  
+
   const handleAddOrigin = () => {
     if (!token) {
       setErrors("Attribute is required");

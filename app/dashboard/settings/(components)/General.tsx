@@ -1,17 +1,19 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import Spinner from "@/components/ui/spinner";
-import { useToast } from "@/components/ui/use-toast";
-import { DeleteIcon } from "@/svg-icons/SVGIcons";
-import Image from "next/image";
 import React, { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
 import axios from "axios";
 import { baseURL } from "@/lib/constants";
 import { fetchAuthSession } from "aws-amplify/auth";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSettings } from "@/hooks/settings-fetch";
+import { useForm } from "react-hook-form";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/components/ui/use-toast";
+import { DeleteIcon } from "@/svg-icons/SVGIcons";
+import Spinner from "@/components/ui/spinner";
+import Image from "next/image";
 
 const General = () => {
+
   const {
     register,
     handleSubmit,
@@ -27,23 +29,20 @@ const General = () => {
 
   const [image, setImage] = useState<File | null>(null);
   const [fileError, setFileError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [changesLoading, setChangesLoading] = useState(false);
+
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const deleteImage = () => {
     setImage(null);
   };
 
   const uploadImage = async (data: any) => {
-    console.log(data);
-
     const session = await fetchAuthSession();
     const accessToken = session.tokens!.accessToken.toString();
-    console.log("Access Token : ", accessToken);
-
     const formData = new FormData();
     formData.append("icon", data);
-
     try {
       const response = await axios.post(`${baseURL}/fund/upload-icon`, formData, {
         headers: {
@@ -51,7 +50,6 @@ const General = () => {
           Authorization: accessToken,
         },
       });
-
       console.log(response.data);
       toast({
         variant: "default",
@@ -69,8 +67,6 @@ const General = () => {
         description: "There was an error uploading the file",
         className: "rounded-xl p-3 bg-red-600 text-white",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -89,71 +85,80 @@ const General = () => {
     }
   };
 
-  const { data: settings, isLoading: isFetchingSettings, isError, error } = useQuery({
-    queryKey: ["settings"],
-    queryFn: async () => {
-      const session = await fetchAuthSession();
-      const accessToken = session.tokens!.accessToken.toString();
-      const response = await axios.get(`${baseURL}/fund/setting`, {
-        headers: {
-          Authorization: accessToken,
-        },
-      });
-      const settings = response.data
-      const generalSettings = settings.data
-      const actualData = generalSettings.settigs;
-      return actualData;
-    },
-  });
+  const { data: settings, isLoading: loading, isError: error } = useSettings();
 
   useEffect(() => {
     if (settings) {
+      const corsSettings = settings.settigs
       reset({
-        displayName: settings.name || "",
-        supportEmail: settings.supported_email || "",
-        supportWebsite: settings.website || "",
+        displayName: corsSettings?.name || "",
+        supportEmail: corsSettings?.supported_email || "",
+        supportWebsite: corsSettings?.website || "",
       });
     }
   }, [settings, reset]);
-  
+
+  const updateGeneralSettings = async (data: any) => {
+    const session = await fetchAuthSession();
+    const accessToken = session.tokens!.accessToken.toString();
+    const response = await axios.put(`${baseURL}/fund/setting`, {
+      icon_url:
+        "https://d1nhio0ox7pgb.cloudfront.net/_img/o_collection_png/green_dark_grey/512x512/plain/graph_triangle.png",
+      supported_email: data.supportEmail,
+      website: data.supportWebsite,
+      name: data.displayName,
+    }, {
+      headers: {
+        Authorization: accessToken,
+      },
+    });
+  }
 
   const mutation = useMutation({
-    mutationFn: async (data: any) => {
-      const session = await fetchAuthSession();
-      const accessToken = session.tokens!.accessToken.toString();
-      console.log("Access Token : ", accessToken);
-      const response = await axios.put(
-        `${baseURL}/fund/setting`,
-        {
-          icon_url:
-            "https://d1nhio0ox7pgb.cloudfront.net/_img/o_collection_png/green_dark_grey/512x512/plain/graph_triangle.png",
-          supported_email: data.supportEmail,
-          website: data.supportWebsite,
-          name: data.displayName,
-        },
-        {
-          headers: {
-            Authorization: accessToken,
-          },
-        }
-      );
-
-      console.log("Response : ", response.data);
-
-      if (response.data.error === false) {
-        return response.data;
-      } else {
-        throw new Error("Failed to update settings");
-      }
+    mutationFn: updateGeneralSettings,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['settings'] });
+      toast({
+        variant: "default",
+        title: "Settings Updated Successfully",
+        duration: 3000,
+        description: "Your changes have been saved",
+        className: "rounded-xl p-3 bg-green-600 text-white",
+      });
+      setChangesLoading(false);
+    },
+    onError: (error: any) => {
+      toast({
+        variant: "destructive",
+        title: "Error Updating Settings",
+        duration: 3000,
+        description: "There is an error while updating settings",
+        className: "rounded-xl p-3 bg-red-600 text-white",
+      });
+      setChangesLoading(false);
     },
   });
 
   const saveChanges = (data: any) => {
     mutation.mutate(data);
+    setChangesLoading(true);
   };
 
-  if (isFetchingSettings) return <Spinner />;
-  if (isError) return <p>Error: {error.message}</p>;
+  if (loading) {
+    return (
+      <div className="flex justify-center items-start">
+        <Spinner />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-start">
+        <p> Error Loading settings data </p>
+      </div>
+    )
+  }
 
   return (
     <>
@@ -174,11 +179,12 @@ const General = () => {
           />
           <InputFileButton
             htmlFor="appIcon"
-            preview={image ? URL.createObjectURL(image) : settings.icon_url }
+            preview={image ? URL.createObjectURL(image) : (settings.settigs?.icon_url || "https://via.placeholder.com/150")}
             fileName={image ? minimzeLength(image.name) : "No file attached"}
             fileSize={image ? convertToMBString(image.size) : "Maximum size: 5MB"}
             deleteImage={deleteImage}
           />
+
           {fileError && <span className="text-red-500 text-xs">{fileError}</span>}
           {errors.displayName && (
             <span className="text-red-500 text-xs">This field is required</span>
@@ -241,7 +247,7 @@ const General = () => {
           className="bg-[#303F60] text-white py-3 px-5 rounded-md text-sm self-start"
           onClick={handleSubmit(saveChanges)}
         >
-          Save Changes
+          {changesLoading ? <Spinner /> : "Save Changes"}
         </Button>
       </div>
     </>
@@ -249,7 +255,6 @@ const General = () => {
 };
 
 export default General;
-
 
 function InputFileButton({
   htmlFor,

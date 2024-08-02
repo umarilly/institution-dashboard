@@ -16,20 +16,7 @@ import { OnBoardingStoreType, baseCurrencyFormType } from "./type";
 import { Controller, useForm } from "react-hook-form";
 
 const CURRENCIES = ["USD", "PKR", "EUR", "GBP", "AED", "SAR", "QAR", "TRY", "AUD"];
-const FISCAL_YEARS = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
+
 const ADMINISTRATORS = [
   "Administrator 1",
   "Administrator 2",
@@ -77,7 +64,9 @@ const FinancialInformationForm = ({
   }
 
   const formatDate = (date: Date | undefined) => {
-    if (!date) return "";
+    if (!date) {
+      return "";
+    } 
     return new Date(date).toLocaleDateString("en-US", {
       month: "long",
       day: "numeric",

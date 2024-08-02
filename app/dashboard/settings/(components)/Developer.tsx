@@ -1,4 +1,9 @@
-import { Button } from "@/components/ui/button";
+import React, { useRef, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSettings } from "@/hooks/settings-fetch";
+import axios from "axios";
+import { baseURL } from "@/lib/constants";
+import { fetchAuthSession } from "aws-amplify/auth";
 import { Switch } from "@/components/ui/switch";
 import {
   Table,
@@ -9,13 +14,9 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/components/ui/use-toast";
 import { CopyIcon, DeleteIcon } from "@/svg-icons/SVGIcons";
-import React, { useRef, useState } from "react";
 import { uuid } from "uuidv4";
 import MyDeveloperDialog from "./MyDeveloperDialog";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import axios from "axios";
-import { baseURL } from "@/lib/constants";
-import { fetchAuthSession } from "aws-amplify/auth";
+import Spinner from "@/components/ui/spinner";
 
 interface ApiToken {
   _id: string;
@@ -24,18 +25,6 @@ interface ApiToken {
   createdAt: string;
   enabled: boolean;
 }
-
-
-const fetchApiTokens = async () => {
-  const session = await fetchAuthSession();
-  const accessToken = session.tokens!.accessToken.toString();
-  const response = await axios.get(`${baseURL}/fund/setting/`, {
-    headers: {
-      Authorization: accessToken,
-    },
-  });
-  return response.data.data.tokens;
-};
 
 const deleteApiToken = async (id: string) => {
   const session = await fetchAuthSession();
@@ -58,36 +47,33 @@ const toggleApiToken = async (id: string) => {
 };
 
 const Developer = () => {
+
   const [envID, setEnvID] = React.useState<string>("abcd-1234-vxyz-qwerty");
   const textRef = useRef<HTMLParagraphElement | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: apiTokens = [], refetch } = useQuery<ApiToken[]>({
-    queryKey: ["apiTokens"],
-    queryFn: fetchApiTokens,
-  });
-
+  const { data: settings, isLoading: loading, isError: error } = useSettings();
+  const tokensData = settings?.tokens || [];
 
   const deleteMutation = useMutation({
     mutationFn: deleteApiToken,
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["settings"] });
       toast({
+        variant: "default",
         title: "Token Deleted",
         description: "Token deleted successfully",
         duration: 3000,
-        variant: "default",
         className: "rounded-xl p-3 bg-green-600 text-white",
       });
-      refetch();
     },
     onError: (error: any) => {
-      console.log("Error Deleting token", error);
       toast({
-        title: "Token Deletion Error",
-        description: error.message,
-        duration: 3000,
         variant: "destructive",
+        title: "Token Deletion Error",
+        description: "There is an error while deleting token",
+        duration: 3000,
         className: "rounded-xl p-3 bg-red-600 text-white",
       });
     },
@@ -96,22 +82,21 @@ const Developer = () => {
   const toggleMutation = useMutation({
     mutationFn: toggleApiToken,
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["settings"] });
       toast({
+        variant: "default",
         title: "Token Toggled",
         description: "Token toggled successfully",
         duration: 3000,
-        variant: "default",
         className: "rounded-xl p-3 bg-green-600 text-white",
       });
-      refetch();
     },
     onError: (error: any) => {
-      console.log("Error Toggling token", error);
       toast({
-        title: "Token Toggling Error",
-        description: error.message,
-        duration: 3000,
         variant: "destructive",
+        title: "Token Toggling Error",
+        description: "Error in toggling the token",
+        duration: 3000,
         className: "rounded-xl p-3 bg-red-600 text-white",
       });
     },
@@ -130,13 +115,30 @@ const Developer = () => {
         });
 
       toast({
+        variant: "default",
         title: "Copied to clipboard",
         description: "Environment ID copied to clipboard",
         duration: 3000,
-        variant: "default",
+        className: "rounded-xl p-3 bg-green-400 text-white",
       });
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-start">
+        <Spinner />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-start">
+        <p> Error Loading settings data </p>
+      </div>
+    )
+  }
 
   const regenerateEnvironmentID = () => {
     const newUUID = uuid();
@@ -157,9 +159,7 @@ const Developer = () => {
               <CopyIcon />
             </div>
           </div>
-          <MyDeveloperDialog
-            onAddSuccess={() => queryClient.invalidateQueries({ queryKey: ["apiTokens"] })}
-          />
+          <MyDeveloperDialog />
         </div>
       </div>
       <div className="mb-10">
@@ -177,7 +177,7 @@ const Developer = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {apiTokens.map((item: ApiToken) => (
+            {tokensData.map((item: ApiToken) => (
               <TableRow key={item._id} className="text-sm text-[#111111] font-medium">
                 <TableCell>{item.name}</TableCell>
                 <TableCell>{item.created_by}</TableCell>
@@ -193,7 +193,7 @@ const Developer = () => {
                     className="cursor-pointer"
                     onClick={() => deleteMutation.mutate(item._id)}
                   >
-                    <DeleteIcon />
+                    {deleteMutation.status && deleteMutation.variables === item._id ? <Spinner /> : <DeleteIcon />}
                   </div>
                 </TableCell>
               </TableRow>

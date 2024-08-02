@@ -26,15 +26,12 @@ const FinancialInformationForm = ({
   } = useForm({ defaultValues: financialInformationForm });
 
   function goBack() {
-    // save state here before going back
     setFinancialInformationForm(watch() as financialInformationFormType);
-
     setSelected(1);
   }
-  function goForward(data: any) {
-    // save state here before going formward
-    setFinancialInformationForm(data);
 
+  function goForward(data: any) {
+    setFinancialInformationForm(data);
     setSelected(3);
   }
 
@@ -57,10 +54,13 @@ const FinancialInformationForm = ({
             id="totalAUM"
             className="mt-2 placeholder:text-[#E8E8E8]"
             placeholder="Enter amount"
-            {...register("totalAUM", { required: true })}
+            {...register("totalAUM", {
+              required: "This field is required",
+              validate: value => value > 0 || "Please enter a positive number", 
+            })}
           />
           {errors.totalAUM && (
-            <span className="text-red-500 text-xs">This field is required</span>
+            <span className="text-red-500 text-xs">{errors.totalAUM.message}</span>
           )}
         </div>
         <div>
@@ -72,10 +72,13 @@ const FinancialInformationForm = ({
             id="estimatedAUM"
             className="mt-2 placeholder:text-[#E8E8E8]"
             placeholder="Enter amount"
-            {...register("estimatedAUM", { required: true })}
+            {...register("estimatedAUM", {
+              required: "This field is required",
+              validate: value => value > 0 || "Please enter a positive number",
+            })}
           />
           {errors.estimatedAUM && (
-            <span className="text-red-500 text-xs">This field is required</span>
+            <span className="text-red-500 text-xs">{errors.estimatedAUM.message}</span>
           )}
         </div>
         <div>
@@ -87,10 +90,13 @@ const FinancialInformationForm = ({
             id="estimatedInvestors"
             className="mt-2 placeholder:text-[#E8E8E8]"
             placeholder="Enter amount"
-            {...register("estimatedInvestors", { required: true })}
+            {...register("estimatedInvestors", {
+              required: "This field is required",
+              validate: value => value > 0 || "Please enter a positive number", 
+            })}
           />
           {errors.estimatedInvestors && (
-            <span className="text-red-500 text-xs">This field is required</span>
+            <span className="text-red-500 text-xs">{errors.estimatedInvestors.message}</span>
           )}
         </div>
       </div>

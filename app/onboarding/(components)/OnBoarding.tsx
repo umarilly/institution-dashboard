@@ -1,12 +1,10 @@
 "use client";
-
-import { memo, useState } from "react";
+import { useState } from "react";
 import BusinessFundForm from "./BusinessFundForm";
 import FinancialInformationForm from "./FinancialInformationForm";
 import SideBar from "./SideBar";
 import FundManagerForm from "./FundManagerForm";
 import FundDocumentsForm from "./FundDocumentsForm";
-
 import { create } from "zustand";
 import BaseCurrencyForm from "./BaseCurrencyForm";
 import {
@@ -26,13 +24,13 @@ export const useOnBoardingFormStore = create<OnBoardingStoreType>()((set) => ({
   businessFundForm: {
     businessName: "",
     domicileIn: "",
-    dateEstablished: new Date(),
+    dateEstablished: "",
     typeOfIndustry: "",
   },
   financialInformationForm: {
-    totalAUM: "",
-    estimatedAUM: "",
-    estimatedInvestors: "",
+    totalAUM: 0,
+    estimatedAUM: 0,
+    estimatedInvestors: 0,
   },
   fundManagerForm: {
     ownerName: "",
@@ -46,7 +44,7 @@ export const useOnBoardingFormStore = create<OnBoardingStoreType>()((set) => ({
   },
   baseCurrencyForm: {
     baseCurrency: "",
-    fundInceptionDate: new Date(),
+    fundInceptionDate: "",
     fiscalYearEnd: "",
     administrator: "",
   },

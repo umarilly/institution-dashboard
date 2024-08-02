@@ -1,5 +1,4 @@
 "use client";
-
 import SidebarCircularIcons from "@/components/ui/SidebarCircularIcons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,13 +41,14 @@ const FinalStepReview = ({
 
   useEffect(() => {
     if (baseCurrencyForm && baseCurrencyForm.fiscalYearEnd) {
-      console.log("Fiscal Year End: ", baseCurrencyForm.fiscalYearEnd); 
+      console.log("Fiscal Year End : ", baseCurrencyForm.fiscalYearEnd); 
       const [monthName, day] = baseCurrencyForm.fiscalYearEnd.split(" ");
       const monthNumber = new Date(`${monthName} 1, 2000`).getMonth() + 1;
       setFicalYearEndMonth(monthNumber);
       setFicalYearEndDay(parseInt(day));
     }
   }, [baseCurrencyForm]);
+
   async function submitForm() {
 
     setLoader(true);
@@ -117,17 +117,19 @@ const FinalStepReview = ({
         variant: "default",
         title: "Onboarding success",
         description: "You have successfully onboarded",
-        duration: 2000,
+        duration: 3000,
+        className: "rounded-xl p-3 bg-green-600 text-white",
       });
-
       setSelected(7);
     }
     catch (err: any) {
       console.log("Error: ", err);
       toast({
         variant: "destructive",
-        description: err.message,
+        title: "Onboarding Error",
+        description: "Error During Onboarding",
         duration: 3000,
+        className: "rounded-xl p-3 bg-red-600 text-white",
       });
     } finally {
       setLoader(false);
@@ -335,15 +337,15 @@ const FinalStepReview = ({
           <label htmlFor="Memorandum">Memorandum</label>
           <InputFileButton
             fileName={
-              // fundDocumentsForm.memorandum
-              //   ? minimzeLength(fundDocumentsForm.memorandum.name)
-              //   : 
+              fundDocumentForm.memorandum
+                ? minimzeLength(fundDocumentForm.memorandum.name)
+                : 
               ""
             }
             fileSize={
-              // fundDocumentsForm.memorandum
-              //   ? convertToMBString(fundDocumentsForm.memorandum.size)
-              //   : 
+              fundDocumentForm.memorandum
+                ? convertToMBString(fundDocumentForm.memorandum.size)
+                : 
               ""
             }
           />
@@ -352,15 +354,15 @@ const FinalStepReview = ({
           <label htmlFor="factsheet">Factsheet</label>
           <InputFileButton
             fileName={
-              // fundDocumentsForm.factsheet
-              //   ? minimzeLength(fundDocumentsForm.factsheet.name)
-              //   : 
+              fundDocumentForm.factsheet
+                ? minimzeLength(fundDocumentForm.factsheet.name)
+                : 
               ""
             }
             fileSize={
-              // fundDocumentsForm.factsheet
-              //   ? convertToMBString(fundDocumentsForm.factsheet.size)
-              //   : 
+              fundDocumentForm.factsheet
+                ? convertToMBString(fundDocumentForm.factsheet.size)
+                : 
               ""
             }
           />
@@ -369,15 +371,15 @@ const FinalStepReview = ({
           <label htmlFor="license">License</label>
           <InputFileButton
             fileName={
-              // fundDocumentsForm.license
-              //   ? minimzeLength(fundDocumentsForm.license.name)
-              //   : 
+              fundDocumentForm.license
+                ? minimzeLength(fundDocumentForm.license.name)
+                : 
               ""
             }
             fileSize={
-              // fundDocumentsForm.license
-              //   ? convertToMBString(fundDocumentsForm.license.size)
-              //   : 
+              fundDocumentForm.license
+                ? convertToMBString(fundDocumentForm.license.size)
+                : 
               ""
             }
           />

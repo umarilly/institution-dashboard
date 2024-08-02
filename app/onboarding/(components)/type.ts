@@ -1,13 +1,13 @@
 export type businessFundFormType = {
   businessName: string;
   domicileIn: string;
-  dateEstablished: Date;
+  dateEstablished: any;
   typeOfIndustry: string;
 };
 export type financialInformationFormType = {
-  totalAUM: string;
-  estimatedAUM: string;
-  estimatedInvestors: string;
+  totalAUM: number;
+  estimatedAUM: number;
+  estimatedInvestors: number;
 };
 export type fundManagerFormType = {
   ownerName: string;
@@ -21,7 +21,7 @@ export type fundDocumentsFormType = {
 };
 export type baseCurrencyFormType = {
   baseCurrency: string;
-  fundInceptionDate: Date;
+  fundInceptionDate: any;
   fiscalYearEnd: any;
   administrator: string;
 };

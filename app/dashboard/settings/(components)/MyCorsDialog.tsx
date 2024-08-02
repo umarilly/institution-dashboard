@@ -28,17 +28,16 @@ const MyCorsDialog = () => {
   const addCorsOrigin = async () => {
     const session = await fetchAuthSession();
     const accessToken = session.tokens!.accessToken.toString();
-    const formData = new FormData();
-    formData.append("origin", origin);
-  
-    await axios.put(`${baseURL}/fund/cors`, formData, {
-      headers: {
-        Authorization: accessToken,
-        "Content-Type": "multipart/form-data",
-      },
-    });
+    await axios.put(`${baseURL}/fund/cors`, {
+      origin: origin
+    },{
+        headers: {
+          Authorization: accessToken,
+        },
+      }
+    );
   };
-  
+
   const mutation = useMutation({
     mutationFn: addCorsOrigin,
     onSuccess: () => {
@@ -52,7 +51,6 @@ const MyCorsDialog = () => {
       });
     },
     onError: (error: any) => {
-      console.error("Error : ", error);
       toast({
         variant: "destructive",
         title: "Error During Adding Origin",

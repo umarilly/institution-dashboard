@@ -51,6 +51,7 @@ const MyCorsDialog = () => {
       });
     },
     onError: (error: any) => {
+      console.error("Error : ", error);
       toast({
         variant: "destructive",
         title: "Error During Adding Origin",

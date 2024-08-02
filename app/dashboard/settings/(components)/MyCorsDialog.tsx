@@ -28,16 +28,17 @@ const MyCorsDialog = () => {
   const addCorsOrigin = async () => {
     const session = await fetchAuthSession();
     const accessToken = session.tokens!.accessToken.toString();
-    await axios.put(`${baseURL}/fund/cors`, {
-      origin: origin
-    },{
-        headers: {
-          Authorization: accessToken,
-        },
-      }
-    );
+    const formData = new FormData();
+    formData.append("origin", origin);
+  
+    await axios.put(`${baseURL}/fund/cors`, formData, {
+      headers: {
+        Authorization: accessToken,
+        "Content-Type": "multipart/form-data",
+      },
+    });
   };
-
+  
   const mutation = useMutation({
     mutationFn: addCorsOrigin,
     onSuccess: () => {
